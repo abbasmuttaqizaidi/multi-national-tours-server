@@ -1,3 +1,4 @@
+import { defaultHeroImage } from "../constants/defaultDestinationsData.js";
 import Destination from "../models/Destination.js";
 import mongoose from "mongoose";
 
@@ -48,7 +49,11 @@ export const createDestination = async (req, res) => {
 export const getDestinations = async (req, res) => {
     try {
         const data = await Destination.find().sort({ createdAt: -1 });
-        res.json(data);
+        const rectifiedData = data.map(item => ({
+            ...item.toObject(),
+            heroImage: item.heroImage === '' ? defaultHeroImage : item.heroImage,
+        }));
+        res.json(rectifiedData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -74,8 +79,9 @@ export const getAllRecommendations = async (req, res) => {
                     location: destination.location,
                     description: destination.description,
                     duration: destination.duration,
-                    heroImage: destination.heroImage ?? null,
+                    heroImage: destination.heroImage === '' ? defaultHeroImage : destination.heroImage,
                     price: String(destination.price ?? ""),
+                    id: destination._id,
                 });
             }
 
@@ -99,7 +105,7 @@ export const getPopularDestinations = async (req, res) => {
 
         return res.json({
             success: Object.keys(popularDestinations).length > 0,
-            data: popularDestinations,
+            data: popularDestinations.map(dest => ({ ...dest, heroImage: dest.heroImage === '' ? defaultHeroImage : dest.heroImage })),
             message: Object.keys(popularDestinations).length > 0 ? "Popular Destinations fetched successfully" : "No popular destinations found",
         });
     } catch (error) {
@@ -109,16 +115,24 @@ export const getPopularDestinations = async (req, res) => {
 
 export const getPopularDestinationsFromDB = async () => {
     try {
-        const popularDestinations = await Destination.find({
-            isPopularDestination: { $eq: true }
-        }).sort({ createdAt: -1 });
+        const popularDestinations = await Destination.find(
+            { isPopularDestination: true },
+            {
+                heroImage: 1,
+                category: 1,
+                name: 1,
+                price: 1,
+                duration: 1,
+                _id: 1, // keep this (frontend ke kaam aata hai)
+            }
+        ).sort({ createdAt: -1 }).lean();
 
         return popularDestinations;
     } catch (error) {
         console.error("Error fetching popular destinations:", error);
         return [];
     }
-}
+};
 
 // GET SINGLE
 export const getDestinationById = async (req, res) => {
@@ -176,7 +190,7 @@ export const deleteDuplicates = async () => {
 export const insertAllData = async (req, res) => {
 
     try {
-       const entries = req.body; // Add entries as an array of objects
+        const entries = req.body; // Add entries as an array of objects
 
         if (!Array.isArray(entries)) {
             return res.status(400).json({ message: "Array of data required" });

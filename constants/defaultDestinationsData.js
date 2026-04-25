@@ -1,0 +1,1 @@
+export const defaultHeroImage = "https://res.cloudinary.com/dreqpuqu5/image/upload/v1776864774/wt2jrfg1rqv6iulrfb0f.jpg"
