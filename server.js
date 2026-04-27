@@ -4,6 +4,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import destinationRoutes from "./routes/destinationRoutes.js";
+import leadGenerationRoutes from "./routes/leadGenerationRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 // Routes AFTER middleware
 app.use("/api/auth", authRoutes);
 app.use("/api", destinationRoutes);
+app.use("/api", leadGenerationRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
